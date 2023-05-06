@@ -10,10 +10,12 @@ from model import *
 from pylab import *
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
-from sklearn.metrics import  mean_absolute_error
+from sklearn.metrics import mean_absolute_error
 
 mpl.rcParams['font.sans-serif'] = ['SimHei']
-pv = ["1A","1B","30","35","22","19","5","8","11","14"]
+pv = ["1A", "1B", "30", "35", "22", "19", "5", "8", "11", "14"]
+
+
 def testXY(num):
     file_path = 'data/{}-2017.csv'.format(pv[num])
     data = pd.read_csv(file_path, header=0, low_memory=False, index_col=0)
@@ -31,7 +33,7 @@ def testXY(num):
         # u'1A Trina - Weather Daily Rainfall (mm)': 'Rainfall'  # 降雨
     })
 
-    #feature = ['Current', 'Wind_speed', 'Power', 'Humidity', 'Temp', 'GHI', 'DHI', 'Wind_dir']
+    # feature = ['Current', 'Wind_speed', 'Power', 'Humidity', 'Temp', 'GHI', 'DHI', 'Wind_dir']
     # 设定输入特征
     input_feature = ['Temp', 'Power', 'Humidity', 'GHI']
     # input_feature = ["Power"]
@@ -48,7 +50,7 @@ def testXY(num):
     data[data < 0] = 0
 
     # 设定样本数目
-    data = data[23905:] #Random
+    data = data[23905:]  # Random
 
     # 找零值点
     # zero_poi = data.isin[0]
@@ -63,10 +65,13 @@ def testXY(num):
     test_x, test_y = method.create_dataset(data, target_feature, input_feature)
     return test_x, test_y, y_scaler
 
+
 lstm_model = []
 # 导入模型
 for _ in range(len(pv)):
     lstm_model.append(torch.load('modelpth/model_{}.pth'.format(pv[_])))
+
+
 # LSTM2 = torch.load('C:/keyan\project\PV_prediction/modelpth\model_lstm_vgg16.pth')
 
 def convert(lsit_):
@@ -76,7 +81,8 @@ def convert(lsit_):
         pred_list.extend(list(temp[_]))
     return pred_list
 
-def prediction(model, series_x, series_y, name,num):
+
+def prediction(model, series_x, series_y, name, num):
     model = model.eval()
     pred = model(series_x)
     pred[pred < 0] = 0
@@ -93,7 +99,7 @@ def prediction(model, series_x, series_y, name,num):
     R2 = r2_score(series_y, pred)
     MAE = mean_absolute_error(series_y, pred)
     # MAPE = method.MAPE_value(series_y, pred)
-    print("{}-".format(pv[num])+name, ' :')
+    print("{}-".format(pv[num]) + name, ' :')
     print(' {}-MSE: {:.3f}'.format(pv[num], MSE))
     print(' {}-RMSE: {:.3f}'.format(pv[num], RMSE))
     print(' {}-MAE: {:.3f}'.format(pv[num], MAE))
@@ -104,13 +110,14 @@ def prediction(model, series_x, series_y, name,num):
     # print(' MAPE: {:.5f}%'.format(MAPE))
     return pred, pred_list
 
+
 pred_lstm = []
 pred_lstm_list = []
 real = []
 real_list = []
 for _ in range(len(pv)):
-    test_x, test_y,y_scaler=testXY(_)
-    temp, temp2 = prediction(lstm_model[_], test_x, test_y, 'LSTM',_)
+    test_x, test_y, y_scaler = testXY(_)
+    temp, temp2 = prediction(lstm_model[_], test_x, test_y, 'LSTM', _)
     pred_lstm.append(temp)
     pred_lstm_list.append(temp2)
     test_y = y_scaler.inverse_transform(test_y.reshape(-1, 1))
